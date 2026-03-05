@@ -1,88 +1,120 @@
 # AI Agent News Digest
 
-CLI tool that fetches, compares, and shares daily AI agent developer news. Powered by Claude.
+An **autonomous AI agent** that researches, compares, and shares daily AI agent developer news. Built with Claude's tool_use API.
 
-## What it does
+## How it works
 
-- Aggregates AI agent news from Hacker News, Reddit, Google News, and Dev.to
-- Filters for developer-relevant content (frameworks, SDKs, tools, benchmarks)
-- Uses Claude to generate a daily digest with comparisons and insights
-- Can compare specific tools head-to-head (e.g., LangChain vs CrewAI)
-- Supports scheduled daily runs at 7 AM
+This is a real AI agent, not a pipeline. It runs an **agentic loop**:
+
+```
+think → pick a tool → execute → observe result → think again → repeat
+```
+
+The agent autonomously decides:
+- **What to search** - crafts its own queries across multiple sources
+- **What to read** - picks articles worth reading in detail
+- **What to compare** - identifies competing tools and frameworks
+- **What to remember** - saves observations to persistent memory for future sessions
+- **What to report** - synthesizes findings into a developer-focused digest
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────┐
+│                  Agent Loop                      │
+│  think → tool_use → observe → think → ...       │
+├─────────────────────────────────────────────────┤
+│  Tools (agent picks from these):                │
+│  ┌──────────────┐  ┌──────────────────────┐     │
+│  │ search_news  │  │ get_trending_topics  │     │
+│  │ fetch_rss    │  │ read_article         │     │
+│  │ recall_memory│  │ save_memory          │     │
+│  └──────────────┘  └──────────────────────┘     │
+├─────────────────────────────────────────────────┤
+│  Memory (persistent across sessions)            │
+│  - Past digests, trends, notes, reported titles │
+└─────────────────────────────────────────────────┘
+```
 
 ## Setup
 
 ```bash
-# Clone the repo
-git clone <your-repo-url>
+git clone https://github.com/kmlsharma53/ai-agent-news-digest.git
 cd ai-agent-news-digest
-
-# Set your API key
 export ANTHROPIC_API_KEY=your-key-here
-
-# Install
-pip install -e .
 ```
 
 ## Usage
 
-### Generate today's digest
+### Daily digest (agent mode)
 ```bash
-agent-news digest
-agent-news digest --save        # save to output/ directory
-agent-news digest --verbose     # show fetch details
+python3 main.py digest              # agent runs autonomously
+python3 main.py digest -v           # watch the agent think and use tools
+python3 main.py digest --save       # save to output/
 ```
 
-### Compare two tools
+### Compare two tools (agent mode)
 ```bash
-agent-news compare langchain crewai
-agent-news compare "claude code" cursor
-agent-news compare autogen langgraph
+python3 main.py compare langchain crewai
+python3 main.py compare "claude code" cursor -v
 ```
 
-### Ask a question
+### Ask a question (agent mode)
 ```bash
-agent-news ask "What is the best agent framework for multi-agent orchestration?"
-agent-news ask "How does MCP work?"
+python3 main.py ask "What is MCP and why should I care?"
+python3 main.py ask "Best framework for multi-agent orchestration?"
 ```
 
-### Just fetch raw news
+### Raw news fetch (no agent, no API key)
 ```bash
-agent-news fetch
+python3 main.py fetch
 ```
 
-### Run without installing
+### View agent memory
 ```bash
-python main.py digest
-python main.py compare langchain crewai
+python3 main.py memory              # see what the agent remembers
+python3 main.py memory --clear      # wipe memory
 ```
 
 ## Schedule daily at 7 AM
 
-### Option 1: macOS LaunchAgent (recommended)
-
 ```bash
-# Copy the provided plist
+crontab -e
+# Add:
+0 7 * * * cd /path/to/ai-agent-news-digest && ANTHROPIC_API_KEY=your-key python3 main.py digest --save
+```
+
+Or use the included macOS LaunchAgent:
+```bash
+# Edit com.agent-news.daily.plist to set your API key
 cp com.agent-news.daily.plist ~/Library/LaunchAgents/
-# Edit it to set your ANTHROPIC_API_KEY and paths
-# Then load it:
 launchctl load ~/Library/LaunchAgents/com.agent-news.daily.plist
 ```
 
-### Option 2: Cron job
+## Verbose mode (-v)
 
-```bash
-crontab -e
-# Add this line (adjust paths):
-0 7 * * * cd /path/to/ai-agent-news-digest && ANTHROPIC_API_KEY=your-key python main.py digest --save
+With `-v`, you can watch the agent's thought process:
+
 ```
+--- Agent Turn 1/15 ---
+  [think] Let me start by checking my memory for recent reports...
+  [tool] recall_memory({})
+  [result] No relevant memories found. (last 7 days)
 
-## Sources tracked
+--- Agent Turn 2/15 ---
+  [think] This is a fresh start. Let me search for the latest news...
+  [tool] search_news({"query": "ai agent framework release 2025"})
+  [result] [{"title": "CrewAI v2 launches with...", ...
 
-- Hacker News (AI agent + LLM agent queries)
-- Reddit (r/MachineLearning, r/LocalLLaMA)
-- Google News (AI agent developer tools)
-- Dev.to (AI agent articles)
+--- Agent Turn 3/15 ---
+  [tool] get_trending_topics({})
+  [result] Trending: mcp ############ (12), claude ######### (9)...
+
+--- Agent Turn 4/15 ---
+  [think] MCP is trending heavily. Let me read more about it...
+  [tool] read_article({"url": "https://..."})
+  ...
+```
 
 ## License
 
