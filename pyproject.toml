@@ -1,0 +1,14 @@
+[project]
+name = "ai-agent-news-digest"
+version = "1.0.0"
+description = "CLI tool that fetches, compares, and shares daily AI agent developer news"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+
+[project.scripts]
+agent-news = "src.cli:main"
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.backends._legacy:_Backend"
